@@ -6,6 +6,7 @@ import GutFeeling from "./pages/GutFeeling";
 import Feed from "./pages/Feed";
 import Daily from "./pages/Daily";
 import Echo from "./pages/Echo";  // Import Echo page
+import Whispers from "./pages/Whispers"; // Import Whispers page
 
 export default function App() {
   return (
@@ -25,8 +26,10 @@ export default function App() {
         <Link to="/portrait">canvas</Link>
         <Link to="/gut">gut check</Link>
         <Link to="/feed">hive</Link>
-        <Link to="/daily">roll it!</Link>
+        <Link to="/whispers">whispers</Link> {/* Whispers nav link */}
         <Link to="/echo">echo</Link> {/* Echo nav link */}
+        <Link to="/daily">roll it!</Link>
+
       </nav>
 
       <main>
@@ -36,8 +39,10 @@ export default function App() {
           <Route path="/portrait" element={<PortraitCanvas />} />
           <Route path="/gut" element={<GutFeeling />} />
           <Route path="/feed" element={<Feed />} />
-          <Route path="/daily" element={<Daily />} />
+          <Route path="/whispers" element={<Whispers />} /> {/* Whispers route */}
           <Route path="/echo" element={<Echo />} /> {/* Echo route */}
+          <Route path="/daily" element={<Daily />} />
+
         </Routes>
       </main>
     </Router>
