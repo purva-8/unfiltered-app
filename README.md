@@ -7,7 +7,7 @@ Built to create real-time, soulful connections beyond what AI typically understa
 
 ## Project Overview
 
-Unfiltered. is a React + Firebase web app designed to let users express raw emotions and instincts through interactive features like collaborative graffiti walls, personal creative canvases, and honest community Q&A. It embraces the gray areas of human experience often lost in pure automation.
+_Unfiltered._ is a  web app designed to let users express raw emotions and instincts through interactive features like collaborative graffiti walls, personal creative canvases, and community engagement. It embraces the gray areas of human experience often lost in pure automation.
 
 ---
 
@@ -27,7 +27,7 @@ Unfiltered. is a React + Firebase web app designed to let users express raw emot
 - **Frontend:** React with Vite for fast, modular development.  
 - **Backend:** Firebase Firestore & Realtime Database for instant updates and collaboration.  
 - **Hosting:** Vercel for fast, global deployment.  
-- **Styling:** CSS Modules (or specify your styling approach).
+- **Styling:** CSS Modules.
 
 ---
 
@@ -35,7 +35,8 @@ Unfiltered. is a React + Firebase web app designed to let users express raw emot
 
 ### Prerequisites
 
-- Node.js (v16 or higher recommended)  
+- Node.js (v16 or higher recommended)
+- Firebase project with Firestore configured
 
 ### Installation
 
