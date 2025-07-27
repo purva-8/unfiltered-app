@@ -1,0 +1,171 @@
+.portrait-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 3rem 1.5rem 2rem;
+    min-height: 100vh;
+    background-color: var(--color-bg);
+    box-sizing: border-box;
+    font-family: var(--font-primary);
+    color: var(--color-text-primary);
+  }
+  
+  .undo-redo-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    max-width: 340px;
+    width: 100%;
+    margin-bottom: 2rem;
+  }
+  
+  .undo-redo-row button {
+    background-color: var(--color-accent);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+    min-width: 90px;
+    height: 44px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .undo-redo-row button:hover {
+    background-color: #7A5F3F;
+  }
+  
+  .polaroid-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .polaroid {
+    background: white;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 12px;
+    width: 340px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .polaroid:hover {
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  }
+  
+  canvas {
+    border: 2px solid var(--color-accent);
+    background-color: #fffdfa;
+    cursor: crosshair;
+    margin-bottom: 1.25rem;
+    border-radius: 6px;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+  
+  .polaroid input[type="text"] {
+    border: none;
+    border-top: 1px solid #ddd;
+    width: 100%;
+    padding: 0.6rem;
+    font-family: monospace;
+    font-size: 0.95rem;
+    background: white;
+    text-align: center;
+    color: var(--color-text-secondary);
+    transition: background-color 0.3s ease;
+    border-radius: 0 0 8px 8px;
+    margin-top: -6px;
+  }
+  
+  .polaroid input[type="text"]:focus {
+    background-color: #f7f3eb;
+    outline: none;
+  }
+  
+  .controls {
+    margin-top: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+  }
+  
+  .controls .row.controls-row {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .controls label {
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    min-width: 90px;
+    user-select: none;
+    text-align: right;
+  }
+  
+  .color-picker {
+    width: 40px !important;
+    height: 40px !important;
+    padding: 0;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .controls input[type="range"] {
+    width: 100px;
+    cursor: pointer;
+  }
+  
+  .controls .row.buttons-row {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    width: 100%;
+    margin-top: 2rem;
+  }
+  
+  .controls .row.buttons-row button {
+    background-color: var(--color-accent);
+    color: white;
+    padding: 0.5rem;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-primary);
+    transition: background-color 0.3s ease;
+    flex: 1;
+    min-width: 90px;
+    height: 44px;
+    text-align: center;
+  }
+  
+  .controls .row.buttons-row button:hover {
+    background-color: #7A5F3F;
+  }
+  
+  .thank-you-gut-style {
+    margin-top: 1rem;
+    font-style: italic;
+    color: #008000;
+    text-align: center;
+    font-size: 1rem;
+    font-family: var(--font-primary);
+  }
+  
