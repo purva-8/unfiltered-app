@@ -19,6 +19,10 @@ export default function Daily() {
   const getRandomQuote = () => {
     if (rolling) return;
 
+    // ✅ Use fresh Audio instance every time
+    const diceSound = new Audio("/sounds/dice.mp3");
+    diceSound.play();
+
     setRolling(true);
 
     setTimeout(() => {
@@ -77,7 +81,7 @@ export default function Daily() {
           100% { transform: rotate(360deg); }
         }
         .dice-roll {
-          animation: diceRollAnimation 1s linear infinite;
+          animation: diceRollAnimation 0.5s linear infinite;
         }
       `}</style>
     </div>

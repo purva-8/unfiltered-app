@@ -3,7 +3,7 @@ import { FiRotateCcw, FiRotateCw } from 'react-icons/fi';
 import Confetti from '../Confetti.jsx';
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
-import './PortraitCanvas.css'; // you can keep styles here or move to index.css
+import './PortraitCanvas.css';
 
 const PortraitCanvas = () => {
   const canvasRef = useRef(null);
@@ -93,6 +93,12 @@ const PortraitCanvas = () => {
     setShowConfetti(false);
   };
 
+  // Play yay sound helper
+  const playYaySound = () => {
+    const yaySound = new Audio("/sounds/yay.mp3");
+    yaySound.play();
+  };
+
   const submitPortrait = async () => {
     const canvas = canvasRef.current;
     const imageData = canvas.toDataURL("image/png");
@@ -107,7 +113,9 @@ const PortraitCanvas = () => {
 
       setShowConfetti(true);
       setShowThankYou(true);
-      setTimeout(() => setShowThankThankYou(false), 2500);
+      playYaySound();
+
+      setTimeout(() => setShowThankYou(false), 2500);
     } catch (error) {
       console.error("Error saving portrait:", error);
     }
@@ -136,24 +144,110 @@ const PortraitCanvas = () => {
             placeholder="# your vibe"
             value={hashtag}
             onChange={(e) => setHashtag(e.target.value)}
+            style={{
+              border: 'none',
+              borderTop: '1px solid #ddd',
+              width: '100%',
+              padding: '0.6rem',
+              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+              fontSize: '1rem',
+              background: 'white',
+              textAlign: 'center',
+              color: '#A0845C',
+              borderRadius: '0 0 8px 8px',
+              marginTop: '-6px',
+              transition: 'background-color 0.3s ease',
+              outline: 'none'
+            }}
+            onFocus={e => e.target.style.backgroundColor = '#f7f3eb'}
+            onBlur={e => e.target.style.backgroundColor = 'white'}
           />
         </div>
 
         <div className="controls">
           <div className="row controls-row">
-            <label>Brush Color:</label>
-            <input type="color" value={brushColor} onChange={(e) => setBrushColor(e.target.value)} />
-            <label>Brush Size:</label>
-            <input type="range" min="1" max="10" value={brushSize} onChange={(e) => setBrushSize(e.target.value)} />
+            <label style={{fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", color: '#A0845C'}}>Brush Color:</label>
+            <input
+              type="color"
+              value={brushColor}
+              onChange={(e) => setBrushColor(e.target.value)}
+              className="color-picker"
+            />
+            <label style={{fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", color: '#A0845C'}}>Brush Size:</label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={brushSize}
+              onChange={(e) => setBrushSize(e.target.value)}
+              style={{ cursor: 'pointer', width: '100px' }}
+            />
           </div>
 
           <div className="row buttons-row">
-            <button onClick={clearCanvas}>Clear</button>
-            <button onClick={submitPortrait}>Submit</button>
+            <button
+              onClick={clearCanvas}
+              style={{
+                backgroundColor: '#8B6F47',
+                color: 'white',
+                padding: '0.5rem',
+                fontWeight: '600',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                transition: 'background-color 0.3s ease',
+                flex: 1,
+                minWidth: 90,
+                height: 44,
+                textAlign: 'center'
+              }}
+              onMouseEnter={e => e.target.style.backgroundColor = '#9c7f50'}
+              onMouseLeave={e => e.target.style.backgroundColor = '#8B6F47'}
+              type="button"
+            >
+              Clear
+            </button>
+            <button
+              onClick={submitPortrait}
+              style={{
+                backgroundColor: '#8B6F47',
+                color: 'white',
+                padding: '0.5rem',
+                fontWeight: '600',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                transition: 'background-color 0.3s ease',
+                flex: 1,
+                minWidth: 90,
+                height: 44,
+                textAlign: 'center'
+              }}
+              onMouseEnter={e => e.target.style.backgroundColor = '#9c7f50'}
+              onMouseLeave={e => e.target.style.backgroundColor = '#8B6F47'}
+              type="button"
+            >
+              Submit
+            </button>
           </div>
 
           {showThankYou && (
-            <p className="thank-you-gut-style">this goes into the collective chaos 🥰</p>
+            <p
+              className="thank-you-gut-style"
+              style={{
+                fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+                marginTop: '1rem',
+                fontStyle: 'italic',
+                color: '#008000',
+                textAlign: 'center',
+                fontSize: '1rem',
+                userSelect: 'none',
+              }}
+            >
+              this goes into the collective chaos 🥰
+            </p>
           )}
         </div>
       </div>
