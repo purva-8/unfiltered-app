@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from "react";
+import { db } from "../firebase";
+import { collection, addDoc, onSnapshot, deleteDoc, doc, updateDoc } from "firebase/firestore";
 
 const fonts = [
  "'Permanent Marker', cursive",
@@ -95,8 +97,27 @@ export default function GraffitiWall() {
  const [selectedId, setSelectedId] = useState(null);
  const [selectedFont, setSelectedFont] = useState(fonts[0]);
  const [selectedColor, setSelectedColor] = useState(colors[0]);
+ const [loading, setLoading] = useState(true);
 
  const textareaRef = useRef();
+
+ // Load texts from Firebase and set up real-time listener
+ useEffect(() => {
+   const unsubscribe = onSnapshot(collection(db, "graffiti-texts"), (snapshot) => {
+     const textsData = snapshot.docs.map(doc => ({
+       id: doc.id,
+       firestoreId: doc.id,
+       ...doc.data()
+     }));
+     setTexts(textsData);
+     setLoading(false);
+   }, (error) => {
+     console.error("Error loading texts:", error);
+     setLoading(false);
+   });
+
+   return () => unsubscribe();
+ }, []);
 
  // Focus textarea when shown
  useEffect(() => {
@@ -117,22 +138,28 @@ export default function GraffitiWall() {
    return () => window.removeEventListener("mousemove", handleMouseMove);
  }, []);
 
- function finishTyping() {
+ async function finishTyping() {
    if (!inputText.trim()) {
      setInputPos(null);
      return;
    }
-   const newText = {
-     id: Date.now(),
-     text: inputText,
-     x: inputPos.x,
-     y: inputPos.y,
-     font: selectedFont,
-     color: selectedColor,
-   };
-   setTexts([...texts, newText]);
-   setInputPos(null);
-   setInputText("");
+   
+   try {
+     const newText = {
+       text: inputText,
+       x: inputPos.x,
+       y: inputPos.y,
+       font: selectedFont,
+       color: selectedColor,
+       timestamp: new Date()
+     };
+     
+     await addDoc(collection(db, "graffiti-texts"), newText);
+     setInputPos(null);
+     setInputText("");
+   } catch (error) {
+     console.error("Error adding text:", error);
+   }
  }
 
  function handleKeyDown(e) {
@@ -140,42 +167,106 @@ export default function GraffitiWall() {
      e.preventDefault();
      finishTyping();
    }
+   if (e.key === "Delete" && selectedId) {
+     e.preventDefault();
+     handleDeleteText();
+   }
  }
 
- function handleTextClick(e, id) {
+ function handleTextClick(e, textItem) {
    e.stopPropagation();
-   const clickedText = texts.find((t) => t.id === id);
-   setSelectedId(id);
-   setSelectedFont(clickedText.font);
-   setSelectedColor(clickedText.color);
+   setSelectedId(textItem.id);
+   setSelectedFont(textItem.font);
+   setSelectedColor(textItem.color);
    setInputPos(null);
  }
 
- function handleTextDrag(id, newPosition) {
-   setTexts((prev) =>
-     prev.map((t) =>
-       t.id === id ? { ...t, x: newPosition.x, y: newPosition.y } : t
-     )
-   );
+ async function handleTextDrag(textItem, newPosition) {
+   try {
+     // Update local state immediately for responsiveness
+     setTexts((prev) =>
+       prev.map((t) =>
+         t.id === textItem.id ? { ...t, x: newPosition.x, y: newPosition.y } : t
+       )
+     );
+     
+     // Update in Firebase
+     if (textItem.firestoreId) {
+       await updateDoc(doc(db, "graffiti-texts", textItem.firestoreId), {
+         x: newPosition.x,
+         y: newPosition.y
+       });
+     }
+   } catch (error) {
+     console.error("Error updating text position:", error);
+   }
+ }
+
+ async function handleDeleteText() {
+   if (!selectedId) return;
+   
+   try {
+     const textToDelete = texts.find(t => t.id === selectedId);
+     if (textToDelete && textToDelete.firestoreId) {
+       await deleteDoc(doc(db, "graffiti-texts", textToDelete.firestoreId));
+       setSelectedId(null);
+     }
+   } catch (error) {
+     console.error("Error deleting text:", error);
+   }
  }
 
  // Update selected text style live
  useEffect(() => {
    if (selectedId) {
-     setTexts((prev) =>
-       prev.map((t) =>
-         t.id === selectedId
-           ? { ...t, font: selectedFont, color: selectedColor }
-           : t
-       )
-     );
+     const updateStyle = async () => {
+       try {
+         const textToUpdate = texts.find(t => t.id === selectedId);
+         if (textToUpdate && textToUpdate.firestoreId) {
+           // Update local state immediately
+           setTexts((prev) =>
+             prev.map((t) =>
+               t.id === selectedId
+                 ? { ...t, font: selectedFont, color: selectedColor }
+                 : t
+             )
+           );
+           
+           // Update in Firebase
+           await updateDoc(doc(db, "graffiti-texts", textToUpdate.firestoreId), {
+             font: selectedFont,
+             color: selectedColor
+           });
+         }
+       } catch (error) {
+         console.error("Error updating text style:", error);
+       }
+     };
+     
+     updateStyle();
    }
  }, [selectedFont, selectedColor, selectedId]);
 
  // Handle back button click
  function handleBackClick() {
-   // Navigate to home page - you can replace this with your routing logic
-   window.location.href = '/'; // or use your router's navigation method
+   window.location.href = '/';
+ }
+
+ if (loading) {
+   return (
+     <div style={{
+       width: "100vw",
+       height: "100vh",
+       display: "flex",
+       alignItems: "center",
+       justifyContent: "center",
+       backgroundColor: "white",
+       fontSize: 24,
+       fontFamily: "'Permanent Marker', cursive"
+     }}>
+       loading...
+     </div>
+   );
  }
 
  return (
@@ -242,7 +333,6 @@ export default function GraffitiWall() {
          e.target.style.transform = "scale(1)";
        }}
      >
-       {/* Left Arrow Icon */}
        <svg 
          width="20" 
          height="20" 
@@ -258,24 +348,102 @@ export default function GraffitiWall() {
        </svg>
      </div>
 
+     {/* Delete Button (shows when text is selected) */}
+     {selectedId && (
+       <div
+         style={{
+           position: "fixed",
+           top: 20,
+           right: 20,
+           width: 48,
+           height: 48,
+           backgroundColor: "#ff4444",
+           borderRadius: "50%",
+           display: "flex",
+           alignItems: "center",
+           justifyContent: "center",
+           cursor: "pointer",
+           boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+           border: "1px solid #cc0000",
+           zIndex: 30,
+           transition: "all 0.2s ease",
+         }}
+         onClick={(e) => {
+           e.stopPropagation();
+           handleDeleteText();
+         }}
+         onMouseEnter={(e) => {
+           e.target.style.backgroundColor = "#cc0000";
+           e.target.style.transform = "scale(1.05)";
+         }}
+         onMouseLeave={(e) => {
+           e.target.style.backgroundColor = "#ff4444";
+           e.target.style.transform = "scale(1)";
+         }}
+         title="Delete selected text (or press Delete key)"
+       >
+         <svg 
+           width="20" 
+           height="20" 
+           viewBox="0 0 24 24" 
+           fill="none" 
+           stroke="white"
+           strokeWidth="2"
+           strokeLinecap="round"
+           strokeLinejoin="round"
+         >
+           <polyline points="3,6 5,6 21,6"></polyline>
+           <path d="m19,6v14a2,2 0 0,1 -2,2H7a2,2 0 0,1 -2,-2V6m3,0V4a2,2 0 0,1 2,-2h4a2,2 0 0,1 2,2v2"></path>
+           <line x1="10" y1="11" x2="10" y2="17"></line>
+           <line x1="14" y1="11" x2="14" y2="17"></line>
+         </svg>
+       </div>
+     )}
+
+     {/* Online indicator */}
+     <div style={{
+       position: "fixed",
+       top: 20,
+       left: "50%",
+       transform: "translateX(-50%)",
+       backgroundColor: "#F5F5DC",
+       color: "#333",
+       padding: "8px 16px",
+       borderRadius: "20px",
+       fontSize: 14,
+       zIndex: 30,
+       display: "flex",
+       alignItems: "center",
+       gap: 8
+     }}>
+       <div style={{
+         width: 8,
+         height: 8,
+         borderRadius: "50%",
+         backgroundColor: "#4CAF50",
+         animation: "pulse 2s infinite"
+       }}></div>
+       Live Collaboration
+     </div>
+
      {/* Render texts with custom draggable */}
-     {texts.map(({ id, text, x, y, font, color }) => (
+     {texts.map((textItem) => (
        <DraggableText
-         key={id}
-         initialPosition={{ x, y }}
-         onDrag={(newPos) => handleTextDrag(id, newPos)}
-         onClick={(e) => handleTextClick(e, id)}
-         isSelected={selectedId === id}
+         key={textItem.id}
+         initialPosition={{ x: textItem.x, y: textItem.y }}
+         onDrag={(newPos) => handleTextDrag(textItem, newPos)}
+         onClick={(e) => handleTextClick(e, textItem)}
+         isSelected={selectedId === textItem.id}
        >
          <div
            style={{
-             fontFamily: font,
+             fontFamily: textItem.font,
              fontSize: 24,
-             color: color,
+             color: textItem.color,
              whiteSpace: "pre-wrap",
            }}
          >
-           {text}
+           {textItem.text}
          </div>
        </DraggableText>
      ))}
@@ -308,7 +476,7 @@ export default function GraffitiWall() {
          onChange={(e) => setInputText(e.target.value)}
          onBlur={finishTyping}
          onKeyDown={handleKeyDown}
-         placeholder="Type here..."
+         placeholder="graffiti here..."
          rows={1}
          autoFocus
        />
@@ -390,6 +558,14 @@ export default function GraffitiWall() {
          ))}
        </div>
      </div>
+
+     <style jsx>{`
+       @keyframes pulse {
+         0% { opacity: 1; }
+         50% { opacity: 0.5; }
+         100% { opacity: 1; }
+       }
+     `}</style>
    </div>
  );
 }
