@@ -5,6 +5,7 @@ import "./Home.css";
 import drawImg from "../assets/draw.png";
 import gutImg from "../assets/gut.png";
 import graffitiImg from "../assets/graffiti.png";
+import writeImg from "../assets/write.png";  // Writing icon added
 
 export default function Home() {
   const navigate = useNavigate();
@@ -43,6 +44,15 @@ export default function Home() {
           role="button"
           tabIndex={0}
           onKeyDown={e => e.key === "Enter" && navigate("/graffiti")}
+        />
+        <img
+          src={writeImg}
+          alt="Write a Whisper"
+          className="icon-button"
+          onClick={() => navigate("/whispers")}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => e.key === "Enter" && navigate("/whispers")}
         />
       </div>
     </div>
