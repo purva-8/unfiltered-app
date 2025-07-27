@@ -1,187 +1,135 @@
-import React, { useEffect, useState, useRef } from "react";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import React, { useState, useEffect } from "react";
+import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "../firebase";
-import ReactionOverlay from "./ReactionOverlay";
-import "./Feed.css"; // Ensure this is imported
+import "./Feed.css";
 
-const AUTO_SCROLL_SPEED = 0.5; // pixels per frame (~30px/sec at 60fps)
+const emojis = ["🎀", "🧸", "🌱", "🫂", "🫶🏻"];
+const responses = ["been there", "feel you", "wait", "nah", "trust it", "sleep on it"];
 
-export default function Feed() {
+const Feed = () => {
   const [portraits, setPortraits] = useState([]);
-  const [gutFeelings, setGutFeelings] = useState([]);
-  const [userReactions, setUserReactions] = useState({}); // { itemId: reaction }
-
-  const portraitsRef = useRef(null);
-  const gutRef = useRef(null);
-  const portraitsScrollId = useRef(null);
-  const gutScrollId = useRef(null);
-
-  const PORTRAIT_STATIC_EMOJIS = ["🫂", "💙", "✨", "🌱", "💫"];
+  const [gutQuestions, setGutQuestions] = useState([]);
+  const [selectedEmoji, setSelectedEmoji] = useState({});
+  const [selectedWord, setSelectedWord] = useState({});
 
   useEffect(() => {
-    const q = query(collection(db, "portraits"), orderBy("submittedAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setPortraits(data);
+    // Listen to portraits collection in Firestore, ordered by submission time desc
+    const portraitsQuery = query(collection(db, "portraits"), orderBy("submittedAt", "desc"));
+    const unsubscribePortraits = onSnapshot(portraitsQuery, (snapshot) => {
+      const fetchedPortraits = snapshot.docs.map(doc => ({
+        id: doc.id,
+        imageUrl: doc.data().imageData,
+        hashtag: doc.data().hashtag || ""
+      }));
+      setPortraits(fetchedPortraits);
     });
-    return () => unsubscribe();
-  }, []);
 
-  useEffect(() => {
-    const q = query(collection(db, "gutFeelings"), orderBy("submittedAt", "desc"));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setGutFeelings(data);
+    // Listen to gutFeelings collection in Firestore, ordered by submission time desc
+    const gutQuery = query(collection(db, "gutFeelings"), orderBy("submittedAt", "desc"));
+    const unsubscribeGut = onSnapshot(gutQuery, (snapshot) => {
+      const fetchedGutQuestions = snapshot.docs.map(doc => ({
+        id: doc.id,
+        question: doc.data().question,
+        details: doc.data().details || ""
+      }));
+      setGutQuestions(fetchedGutQuestions);
     });
-    return () => unsubscribe();
-  }, []);
-
-  const startAutoScroll = (ref, scrollIdRef) => {
-    if (!ref.current) return;
-
-    const container = ref.current;
-
-    const step = () => {
-      // Check if there's actual content overflow before attempting to scroll
-      if (container.scrollWidth > container.clientWidth) {
-        container.scrollLeft += AUTO_SCROLL_SPEED;
-        if (container.scrollLeft >= container.scrollWidth - container.clientWidth) {
-          container.scrollLeft = 0; // Reset to start if end is reached
-        }
-      } else {
-        // If content doesn't overflow, no need to scroll, cancel animation
-        if (scrollIdRef.current) cancelAnimationFrame(scrollIdRef.current);
-        scrollIdRef.current = null; // Clear the ID
-        return; // Exit step function
-      }
-      scrollIdRef.current = requestAnimationFrame(step);
-    };
-
-    // Ensure previous animation frame is cancelled before starting a new one
-    if (scrollIdRef.current) cancelAnimationFrame(scrollIdRef.current);
-    scrollIdRef.current = requestAnimationFrame(step); // Start the animation
-  };
-
-  useEffect(() => {
-    // Only start auto-scroll if there are items to scroll
-    if (portraits.length > 0) {
-      startAutoScroll(portraitsRef, portraitsScrollId);
-    }
-    if (gutFeelings.length > 0) {
-      startAutoScroll(gutRef, gutScrollId);
-    }
 
     return () => {
-      if (portraitsScrollId.current) cancelAnimationFrame(portraitsScrollId.current);
-      if (gutScrollId.current) cancelAnimationFrame(gutScrollId.current);
+      unsubscribePortraits();
+      unsubscribeGut();
     };
-  }, [portraits, gutFeelings]); // Re-run effect if data changes
+  }, []);
 
-  const handleReact = async (collectionName, itemId, reaction) => {
-    setUserReactions((prev) => ({ ...prev, [itemId]: reaction }));
+  const handleEmojiClick = (id, emoji) => {
+    setSelectedEmoji(prev => ({ ...prev, [id]: emoji }));
+  };
 
-    try {
-      const docRef = doc(db, collectionName, itemId);
-      // Ensure the reaction is set for the specific user/item, assuming 'userReactions' field in Firebase
-      // If you are storing reactions directly as a count or a map, adjust this:
-      // For simplicity, this updates a field called `userReactions.[itemId]` with the reaction string.
-      await updateDoc(docRef, {
-        [`userReactions.${itemId}`]: reaction,
-      });
-    } catch (error) {
-      console.error("Error updating reaction:", error);
-    }
+  const handleWordClick = (id, word) => {
+    setSelectedWord(prev => ({ ...prev, [id]: word }));
+  };
+
+  // Create duplicated arrays for seamless infinite scroll
+  // We duplicate the content so when animation reaches -50%, it looks continuous
+  const duplicatedPortraits = [...portraits, ...portraits];
+  const duplicatedGutQuestions = [...gutQuestions, ...gutQuestions];
+
+  const pauseAnimation = (e) => {
+    e.currentTarget.querySelector(".carousel-content").style.animationPlayState = "paused";
+  };
+
+  const resumeAnimation = (e) => {
+    e.currentTarget.querySelector(".carousel-content").style.animationPlayState = "running";
   };
 
   return (
-    <div className="feed-container">
-      <h3>Portraits</h3>
+    <div className="feed-wrapper">
+      <h2>🖼️ Portrait Hive</h2>
       <div
-        ref={portraitsRef}
-        className="scroll-row portrait-scroll-row"
-        style={{
-          // scrollBehavior, cursor, userSelect can go into Feed.css
-          // borderBottom is specific to portraits section
-          borderBottom: "1px solid #ccc",
-          position: "relative",
-          whiteSpace: "nowrap", // Crucial for horizontal layout
-        }}
+        className="carousel"
+        onMouseEnter={pauseAnimation}
+        onMouseLeave={resumeAnimation}
       >
-        {portraits.map(({ id, imageData, hashtag }) => (
-          <div
-            key={id}
-            className="feed-card portrait-card"
-            style={{
-              position: "relative", // Needed for absolute positioning of overlay and emojis
-              paddingBottom: "40px", // Make space for the ReactionOverlay
-              // minWidth and height are now in CSS, but can be overridden here if needed
-            }}
-          >
-            {imageData ? (
-              <img
-                src={imageData}
-                alt={hashtag || "portrait"}
-                style={{ width: "100%", height: 160, objectFit: "cover" }}
-              />
-            ) : (
-              <div className="image-placeholder"> {/* Add a class for styling */}
-                No Image
+        <div className="carousel-content">
+          {portraits.length > 0 ? (
+            duplicatedPortraits.map((portrait, index) => (
+              <div key={`${portrait.id}-${index}`} className="card">
+                <img src={portrait.imageUrl} alt={portrait.hashtag || "Portrait"} />
+                <div className="hashtag-container">
+                  {portrait.hashtag && (
+                    <p className="hashtag-text">#{portrait.hashtag}</p>
+                  )}
+                </div>
+                <div className="emoji-row">
+                  {emojis.map((emoji) => (
+                    <button
+                      key={emoji}
+                      className={`emoji-btn ${selectedEmoji[portrait.id] === emoji ? "selected" : ""}`}
+                      onClick={() => handleEmojiClick(portrait.id, emoji)}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-
-            {/* Displaying the static emojis for Portrait posts */}
-            <div className="portrait-static-emojis">
-              {PORTRAIT_STATIC_EMOJIS.map((emoji) => (
-                <span key={emoji}>{emoji}</span>
-              ))}
-            </div>
-
-            {/* ReactionOverlay needs to be positioned absolutely within the card */}
-            <ReactionOverlay
-              type="portrait"
-              currentReaction={userReactions[id]}
-              onReact={(reaction) => handleReact("portraits", id, reaction)}
-            />
-          </div>
-        ))}
+            ))
+          ) : (
+            <p>Loading portraits...</p>
+          )}
+        </div>
       </div>
 
-      <h3>Gut Feelings</h3>
+      <h2>🧠 Gut Questions</h2>
       <div
-        ref={gutRef}
-        className="scroll-row gut-feeling-scroll-row"
-        style={{
-          // scrollBehavior, cursor, userSelect can go into Feed.css
-          position: "relative",
-          whiteSpace: "nowrap", // Crucial for horizontal layout
-        }}
+        className="carousel"
+        onMouseEnter={pauseAnimation}
+        onMouseLeave={resumeAnimation}
       >
-        {gutFeelings.map(({ id, question, details }) => (
-          <div
-            key={id}
-            className="feed-card gut-feeling-card"
-            style={{
-              // padding is now in CSS
-              position: "relative", // Needed for absolute positioning of overlay
-              paddingBottom: "40px", // Make space for the ReactionOverlay
-            }}
-          >
-            <div className="gut-feeling-question">
-              {question || "No Question"}
-            </div>
-            <div className="gut-feeling-details">
-              {details || "No details provided."}
-            </div>
-
-            {/* ReactionOverlay needs to be positioned absolutely within the card */}
-            <ReactionOverlay
-              type="gut"
-              currentReaction={userReactions[id]}
-              onReact={(reaction) => handleReact("gutFeelings", id, reaction)}
-            />
-          </div>
-        ))}
+        <div className="carousel-content">
+          {gutQuestions.length > 0 ? (
+            duplicatedGutQuestions.map((q, index) => (
+              <div key={`${q.id}-${index}`} className="card gut">
+                <p>{q.question}</p>
+                <div className="word-row">
+                  {responses.map((word) => (
+                    <button
+                      key={word}
+                      className={`word-btn ${selectedWord[q.id] === word ? "selected" : ""}`}
+                      onClick={() => handleWordClick(q.id, word)}
+                    >
+                      {word}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : (
+            <p>Loading gut questions...</p>
+          )}
+        </div>
       </div>
     </div>
   );
-}
+};
+
+export default Feed;

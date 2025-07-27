@@ -1,127 +1,144 @@
-/* Feed.css */
+.feed-wrapper {
+  padding: 2rem;
+  background: #fdf8f0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #4a4a4a;
+}
 
-.feed-container {
+h2 {
+  margin-top: 3rem;
+  font-size: 1.5rem;
+  color: #8B6F47;
+}
+
+.carousel {
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+.carousel-content {
+  display: flex;
+  gap: 1rem;
+  animation: scrollLeft 60s linear infinite;
+  width: max-content;
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.card {
+  flex: 0 0 300px;
+  min-width: 300px;
+  height: 300px;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
   padding: 1rem;
+  transition: transform 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
-.feed-container h3 {
-  color: var(--color-text-primary);
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
 }
 
-/* Horizontal Scroll Container */
-.scroll-row {
-    display: flex;
-    overflow-x: auto; /* Keep this for horizontal scroll */
-    gap: 1rem; /* Space between cards */
-    padding: 1rem 0;
-    scroll-behavior: smooth; /* From inline style */
-    cursor: grab; /* From inline style */
-    user-select: none; /* From inline style */
-    /* Hide scrollbar in different browsers for a cleaner carousel look */
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
-    position: relative; /* Ensure children can be positioned absolutely relative to this */
-}
-.scroll-row::-webkit-scrollbar {
-    display: none; /* Chrome, Safari, Opera */
-}
-
-/* Common styles for all Feed Cards */
-.feed-card {
-    background: var(--color-bg);
-    border: 1px solid var(--color-accent);
-    border-radius: 8px; /* Consistent border radius */
-    flex-shrink: 0; /* Ensures cards don't shrink below min-width */
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    overflow: hidden; /* Ensures content respects border-radius */
-    display: flex; /* Setup for internal flex layout */
-    flex-direction: column; /* Stack image/text vertically */
-    justify-content: space-between; /* Distribute space within the card */
-    position: relative; /* Crucial: Make sure children with absolute positioning are relative to this */
-}
-
-/* Specific styles for Portrait Cards */
-.portrait-card {
-  min-width: 180px;
-  height: 220px; /* Fixed height for consistency */
-}
-
-/* Image placeholder if no image data */
-.image-placeholder {
+.card img {
   width: 100%;
-  height: 160px;
-  background-color: #e0e0e0;
+  height: 200px;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+/* Fixed hashtag container - always reserves space */
+.hashtag-container {
+  height: 2rem; /* Fixed height to always reserve space */
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
-  font-size: 0.9em;
-  flex-shrink: 0; /* Ensure it takes its full height */
+  margin-top: 0.5rem;
 }
 
-/* Static emojis below portrait image */
-.portrait-static-emojis {
+.hashtag-text {
+  text-align: center;
+  color: #A0845C;
+  font-weight: 600;
+  margin: 0;
+}
+
+.card.gut {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.emoji-row,
+.word-row {
   display: flex;
   justify-content: center;
-  gap: 8px; /* Spacing between emojis */
-  padding: 8px; /* Padding around emojis */
-  font-weight: 600;
-  font-size: 14px;
-  color: var(--color-accent);
-  text-align: center;
-  position: absolute; /* Position relative to .portrait-card */
-  bottom: 4px; /* Adjust this to control spacing from bottom, above overlay */
-  left: 0;
-  right: 0;
-  background-color: var(--color-bg); /* Match card background */
-  z-index: 5; /* Below ReactionOverlay but above card content */
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  gap: 0.5rem;
 }
 
-
-/* Specific styles for Gut Feeling Cards */
-.gut-feeling-card {
-  min-width: 280px;
-  height: 140px; /* Fixed height for consistency */
-  padding: 12px; /* Internal padding */
+.emoji-btn {
+  font-size: 1.2rem;
+  padding: 0.4rem 0.6rem;
+  border: none;
+  background: #f5e8d5;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
 
-.gut-feeling-question {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-accent);
-  margin-bottom: 8px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal; /* Allow text to wrap */
+.emoji-btn:hover {
+  background: #ebd7c1;
+  transform: scale(1.05);
 }
 
-.gut-feeling-details {
-  font-size: 14px;
-  color: #555;
-  flex-grow: 1; /* Allows details to take available space */
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: normal; /* Allow text to wrap */
+.emoji-btn.selected {
+  background: #8B6F47;
+  color: white;
+  font-weight: bold;
+  transform: scale(1.1);
 }
 
-/* ReactionOverlay styling (if not in its own CSS file) */
-/* This ensures the overlay is correctly positioned at the bottom of the card */
-.reaction-overlay-container { /* Add this class to your ReactionOverlay's outermost div */
-    position: absolute;
-    bottom: 8px; /* Adjust as needed */
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.6);
-    border-radius: 20px;
-    padding: 4px 12px;
-    display: flex;
-    gap: 12px;
-    z-index: 10;
-    user-select: none;
-    color: white;
-    font-weight: 600;
-    font-size: 16px;
+.word-btn {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+  background: #e8dcd1;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.word-btn:hover {
+  background: #d4c4b5;
+  transform: scale(1.02);
+}
+
+.word-btn.selected {
+  background: #8B6F47;
+  color: white;
+  font-weight: bold;
+  transform: scale(1.05);
+}
+
+.word-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
 }
